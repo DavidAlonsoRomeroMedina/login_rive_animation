@@ -11,70 +11,100 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   bool _isObscure = true;
 
+  StateMachineController? _controller;
+
+  SMIBool? _isChecking;
+  SMIBool? _isHandsUp;
+  SMIBool? _trigSuccess;
+  SMIBool? _trigFail;
+  SMIBool? _numLook;
+
+  get artboard => null;
+
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            final width = constraints.maxWidth;
-            final horizontalPadding = width < 600 ? 24.0 : width * 0.08;
-            final verticalPadding = width < 600 ? 16.0 : 32.0;
-            final maxWidth = width >= 900 ? 720.0 : 560.0;
+    final Size screenSize = MediaQuery.of(context).size;
 
-            return Padding(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPadding,
-                vertical: verticalPadding,
-              ),
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  child: Column(
-                    children: [
-                      const RiveAnimation.asset(
-                        'assets/login-bear-animation.riv',
-                      ),
-                      const SizedBox(height: 10),
-                      const TextField(
-                        decoration: InputDecoration(
-                          hintText: 'Email',
-                          prefixIcon: Icon(Icons.email),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 10),
-                      TextField(
-                        obscureText: _isObscure,
-                        decoration: InputDecoration(
-                          hintText: 'Password',
-                          prefixIcon: const Icon(Icons.lock),
-                          suffixIcon: IconButton(
-                            icon: const Icon(Icons.visibility),
-                            onPressed: () {
-                              setState(() {
-                                _isObscure = !_isObscure;
-                              });
-                              icon: Icon(
-                                _isObscure
-                                    ? Icons.visibility
-                                    : Icons.visibility_off,
-                              );
-                            },
-                          ),
-                          border: const OutlineInputBorder(
-                            borderRadius: BorderRadius.all(Radius.circular(12)),
-                          ),
-                        ),
-                      ),
-                    ],
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              children: [
+                SizedBox(
+                  width: screenSize.width,
+                  height: 200,
+                  child: RiveAnimation.asset(
+                    'assets/login-bear-animation.riv',
+                    stateMachines: const ['Login Machine'],
+                    onInit: (artboard) {
+                      _controller = StateMachineController.fromArtboard(
+                        artboard,
+                        'Login Machine',
+                      );
+
+                      if (_controller == null) return;
+
+                      artboard.addController(_controller!);
+
+                      _isChecking = _controller!.findSMI('isChecking');
+                      _isHandsUp = _controller!.findSMI('isHandsUp');
+                      _trigSuccess = _controller!.findSMI('trigSuccess');
+                      _trigFail = _controller!.findSMI('trigFail');
+                      _numLook = _controller!.findSMI('numLook');
+                    },
                   ),
                 ),
-              ),
-            );
-          },
+                //Para separar elementos
+                SizedBox(height: 10,),
+                //Email
+                TextField(
+                  onChanged: (value){
+                    if (_isHandsUp != null) {
+                      _isHandsUp!.change(false);
+                    }
+                    // si isChecking es null
+                    if (_isChecking != null) return; 
+                    _isChecking!.change(true);
+                    
+                  },
+                  decoration: InputDecoration(
+                    hintText: "Email",
+                    prefixIcon: const Icon(Icons.email),
+                    border: OutlineInputBorder(
+                      //Para redondear los bordes
+                      borderRadius: BorderRadius.circular(12)
+                    )
+                  ),
+                ),
+                const SizedBox(height: 10,),
+                //Password
+                TextField(
+                  obscureText: _isObscure,
+                  decoration: InputDecoration(
+                    hintText: "Password",
+                    prefixIcon: const Icon(Icons.lock),
+                    suffixIcon: IconButton(
+                      onPressed: (){
+                        //Refrescar el icono
+                        setState(() {
+                          _isObscure = !_isObscure;
+                        });
+                      }, 
+                      icon: Icon(
+                        _isObscure ? Icons.visibility : Icons.visibility_off,
+                      )),
+                    border: OutlineInputBorder(
+                      //Para redondear los bordes
+                      borderRadius: BorderRadius.circular(12)
+                    )
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );
